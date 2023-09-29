@@ -83,3 +83,31 @@ If you're integrating VisionCamera in a production app, consider [funding this p
 <br />
 
 #### 🚀 Get started by [setting up permissions](https://react-native-vision-camera.com/docs/guides/)!
+
+### Fixed crash app when build XCode 15 using vision-camera-code-scanner@0.2.0
+```tsx
+File: react-native-vision-camera/ios/Frame Processor/FrameProcessorPlugin.h
+Add
+Line 52: @interface objc_name (FrameProcessorPlugin)
+With
+Line 52: @interface objc_name (FrameProcessorPlugin) <FrameProcessorPluginBase>
+
+Replace
+Line 56: +(void)load
+With
+Line 56: __attribute__((constructor)) static void VISION_CONCAT(initialize_, objc_name)()
+```
+
+Add Podfile
+```tsx
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    if pod.name.eql?('VisionCamera') || pod.name.eql?('RNReanimated')
+      Pod::UI.puts "#{pod.name}: Using overridden static_framework value of 'true'"
+      def pod.build_type
+        Pod::BuildType.static_library
+      end
+    end
+  end
+end
+```
